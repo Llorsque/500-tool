@@ -15,10 +15,17 @@ Een superlicht tooltje (static HTML/CSS/JS) om bij een schaatswedstrijd twee oml
 - Top 10 snelste tijden (zelfde lijst, beperkt tot 10)
 - Reset knop en CSV export
 
+
+
+## Vooraf ingevulde 1e omloop
+
+In deze versie zijn de **1e omloop tijden alvast ingevuld** en staan de rijders links **vast** in de volgorde van snelste → langzaamste (op basis van omloop 1). Je kunt alleen nog de 2e omloop invullen; de beste (snelste) geldige tijd blijft tellen.
+
 ## Tijdsnotatie
 
 Vul tijden in als:
 - `SS,mmm` (bijv. `40,123`)
+- of `M:SS,mmm` (bijv. `1:12,345`)
 
 > De tool accepteert ook een punt als scheiding: `40.123`.
 

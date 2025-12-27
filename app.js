@@ -2,22 +2,19 @@
  * Schaats Klassement Tool (static, no backend)
  * - 10 rijders met 2 tijden
  * - Beste tijd (min) telt; 2e omloop telt alleen als ingevuld én geldig
- *
- * Belangrijk: invoertabel wordt NIET opnieuw gerenderd bij elke toetsaanslag,
- * zodat je in 1x kunt door typen zonder opnieuw te moeten klikken.
  */
 
-const DEFAULT_NAMES = [
-  "Jenning de Boo",
-  "Stefan Westenbroek",
-  "Merijn Scheperkamp",
-  "Sebas Diniz",
-  "Joep Wennemars",
-  "Janno Botman",
-  "Mats van den Bos",
-  "Johan Talsma",
-  "Tim Prins",
-  "Serge Yoro"
+const DEFAULT_RIDERS = [
+  { name: "Sebas Diniz", t1: "34,142", t2: "" },
+  { name: "Jenning de Boo", t1: "34,361", t2: "" },
+  { name: "Merijn Scheperkamp", t1: "34,649", t2: "" },
+  { name: "Joep Wennemars", t1: "34,671", t2: "" },
+  { name: "Tim Prins", t1: "34,820", t2: "" },
+  { name: "Kayo Vos", t1: "34,833", t2: "" },
+  { name: "Janno Botman", t1: "34,986", t2: "" },
+  { name: "Tijmen Snel", t1: "35,038", t2: "" },
+  { name: "Mats van den Bos", t1: "35,188", t2: "" },
+  { name: "Stefan Westenbroek", t1: "39,556", t2: "" },
 ];
 
 const elInputTbody = document.getElementById("inputTbody");
@@ -29,11 +26,11 @@ const btnExport = document.getElementById("btnExport");
 
 elYear.textContent = new Date().getFullYear();
 
-const state = DEFAULT_NAMES.map((name, idx) => ({
+const state = DEFAULT_RIDERS.map((r, idx) => ({
   id: idx + 1,
-  name,
-  t1: "",
-  t2: ""
+  name: r.name,
+  t1: r.t1,
+  t2: r.t2
 }));
 
 function escapeHtml(str){
@@ -48,6 +45,7 @@ function escapeHtml(str){
 /**
  * Parse times:
  * - "SS,mmm" (e.g. 40,123)
+ * - "M:SS,mmm" (e.g. 1:12,345)
  * Also accept dot as decimal separator.
  * Returns integer milliseconds or null.
  */
@@ -58,6 +56,25 @@ function parseTimeToMs(raw){
 
   // normalize: allow '.' as decimal separator
   const norm = s.replace(".", ",");
+
+  // M:SS,mmm
+  if(norm.includes(":")){
+    const [mPart, rest] = norm.split(":");
+    const minutes = Number(mPart);
+    if(!Number.isInteger(minutes) || minutes < 0) return null;
+
+    const restMatch = rest.match(/^\d{1,2},\d{3}$/);
+    if(!restMatch) return null;
+
+    const [secStr, msStr] = rest.split(",");
+    const seconds = Number(secStr);
+    const millis = Number(msStr);
+
+    if(!Number.isInteger(seconds) || seconds < 0 || seconds > 59) return null;
+    if(!Number.isInteger(millis) || millis < 0 || millis > 999) return null;
+
+    return minutes * 60000 + seconds * 1000 + millis;
+  }
 
   // SS,mmm (allow 1-3 digit seconds)
   const match = norm.match(/^\d{1,3},\d{3}$/);
@@ -75,10 +92,16 @@ function parseTimeToMs(raw){
 
 function formatMs(ms){
   if(ms == null) return "—";
-  const seconds = Math.floor(ms / 1000);
-  const millis = ms % 1000;
+  const minutes = Math.floor(ms / 60000);
+  const rem = ms % 60000;
+  const seconds = Math.floor(rem / 1000);
+  const millis = rem % 1000;
 
   const msStr = String(millis).padStart(3, "0");
+  if(minutes > 0){
+    return `${minutes}:${String(seconds).padStart(2,"0")},${msStr}`;
+  }
+  // seconds can be >= 100 for some formats; pad to 2 when < 100
   const secStr = seconds < 100 ? String(seconds).padStart(2,"0") : String(seconds);
   return `${secStr},${msStr}`;
 }
@@ -108,7 +131,7 @@ function getRowStatus(r){
   return { klass: "na", label: "Wacht op tijd" };
 }
 
-function buildInputTable(){
+function renderInput(){
   elInputTbody.innerHTML = state.map(r => {
     const best = getBestTimeMs(r);
     const status = getRowStatus(r);
@@ -119,7 +142,7 @@ function buildInputTable(){
         <td>
           <input class="inputName" type="text" value="${escapeHtml(r.name)}" data-field="name" aria-label="Naam rijder ${r.id}">
           <div style="margin-top:6px">
-            <span class="badge ${status.klass}" data-role="badge">${escapeHtml(status.label)}</span>
+            <span class="badge ${status.klass}">${escapeHtml(status.label)}</span>
           </div>
         </td>
         <td>
@@ -128,12 +151,12 @@ function buildInputTable(){
         <td>
           <input class="inputTime" inputmode="numeric" placeholder="00,000" value="${escapeHtml(r.t2)}" data-field="t2" aria-label="2e omloop rijder ${r.id}">
         </td>
-        <td data-role="best"><strong>${escapeHtml(formatMs(best))}</strong></td>
+        <td><strong>${escapeHtml(formatMs(best))}</strong></td>
       </tr>
     `;
   }).join("");
 
-  // Initial invalid highlighting
+  // Apply invalid highlighting after DOM update
   for(const tr of elInputTbody.querySelectorAll("tr")){
     const id = Number(tr.getAttribute("data-id"));
     const rider = state.find(x => x.id === id);
@@ -144,30 +167,6 @@ function buildInputTable(){
 
     t1.classList.toggle("invalid", rider.t1.trim() !== "" && parseTimeToMs(rider.t1) == null);
     t2.classList.toggle("invalid", rider.t2.trim() !== "" && parseTimeToMs(rider.t2) == null);
-  }
-}
-
-function updateRow(tr, rider){
-  const t1 = tr.querySelector('input[data-field="t1"]');
-  const t2 = tr.querySelector('input[data-field="t2"]');
-  const badge = tr.querySelector('[data-role="badge"]');
-  const bestCell = tr.querySelector('[data-role="best"]');
-
-  // invalid highlighting
-  if(t1) t1.classList.toggle("invalid", rider.t1.trim() !== "" && parseTimeToMs(rider.t1) == null);
-  if(t2) t2.classList.toggle("invalid", rider.t2.trim() !== "" && parseTimeToMs(rider.t2) == null);
-
-  // badge
-  const status = getRowStatus(rider);
-  if(badge){
-    badge.className = `badge ${status.klass}`;
-    badge.textContent = status.label;
-  }
-
-  // best time
-  const best = getBestTimeMs(rider);
-  if(bestCell){
-    bestCell.innerHTML = `<strong>${escapeHtml(formatMs(best))}</strong>`;
   }
 }
 
@@ -216,6 +215,11 @@ function renderRanking(){
   }
 }
 
+function rerender(){
+  renderInput();
+  renderRanking();
+}
+
 elInputTbody.addEventListener("input", (e) => {
   const target = e.target;
   if(!(target instanceof HTMLInputElement)) return;
@@ -229,11 +233,11 @@ elInputTbody.addEventListener("input", (e) => {
   const field = target.getAttribute("data-field");
   if(!field) return;
 
+  // Save
   rider[field] = target.value;
 
-  // Update only this row (no full re-render of inputs) + ranking
-  updateRow(tr, rider);
-  renderRanking();
+  // Re-render just status highlights + ranking.
+  rerender();
 });
 
 btnReset.addEventListener("click", () => {
@@ -241,22 +245,7 @@ btnReset.addEventListener("click", () => {
     r.t1 = "";
     r.t2 = "";
   }
-
-  // Clear UI inputs without rebuilding the table
-  for(const tr of elInputTbody.querySelectorAll("tr")){
-    const id = Number(tr.getAttribute("data-id"));
-    const rider = state.find(x => x.id === id);
-    if(!rider) continue;
-
-    const t1 = tr.querySelector('input[data-field="t1"]');
-    const t2 = tr.querySelector('input[data-field="t2"]');
-    if(t1) t1.value = "";
-    if(t2) t2.value = "";
-
-    updateRow(tr, rider);
-  }
-
-  renderRanking();
+  rerender();
 });
 
 btnExport.addEventListener("click", () => {
@@ -295,6 +284,5 @@ btnExport.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// Init
-buildInputTable();
-renderRanking();
+// Initial render
+rerender();
