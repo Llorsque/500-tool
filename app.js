@@ -2,6 +2,9 @@
  * Schaats Klassement Tool (static, no backend)
  * - 10 rijders met 2 tijden
  * - Beste tijd (min) telt; 2e omloop telt alleen als ingevuld én geldig
+ *
+ * Belangrijk: invoertabel wordt NIET opnieuw gerenderd bij elke toetsaanslag,
+ * zodat je in 1x kunt door typen zonder opnieuw te moeten klikken.
  */
 
 const DEFAULT_NAMES = [
@@ -45,7 +48,6 @@ function escapeHtml(str){
 /**
  * Parse times:
  * - "SS,mmm" (e.g. 40,123)
- * - "M:SS,mmm" (e.g. 1:12,345)
  * Also accept dot as decimal separator.
  * Returns integer milliseconds or null.
  */
@@ -106,7 +108,7 @@ function getRowStatus(r){
   return { klass: "na", label: "Wacht op tijd" };
 }
 
-function renderInput(){
+function buildInputTable(){
   elInputTbody.innerHTML = state.map(r => {
     const best = getBestTimeMs(r);
     const status = getRowStatus(r);
@@ -117,7 +119,7 @@ function renderInput(){
         <td>
           <input class="inputName" type="text" value="${escapeHtml(r.name)}" data-field="name" aria-label="Naam rijder ${r.id}">
           <div style="margin-top:6px">
-            <span class="badge ${status.klass}">${escapeHtml(status.label)}</span>
+            <span class="badge ${status.klass}" data-role="badge">${escapeHtml(status.label)}</span>
           </div>
         </td>
         <td>
@@ -126,12 +128,12 @@ function renderInput(){
         <td>
           <input class="inputTime" inputmode="numeric" placeholder="00,000" value="${escapeHtml(r.t2)}" data-field="t2" aria-label="2e omloop rijder ${r.id}">
         </td>
-        <td><strong>${escapeHtml(formatMs(best))}</strong></td>
+        <td data-role="best"><strong>${escapeHtml(formatMs(best))}</strong></td>
       </tr>
     `;
   }).join("");
 
-  // Apply invalid highlighting after DOM update
+  // Initial invalid highlighting
   for(const tr of elInputTbody.querySelectorAll("tr")){
     const id = Number(tr.getAttribute("data-id"));
     const rider = state.find(x => x.id === id);
@@ -142,6 +144,30 @@ function renderInput(){
 
     t1.classList.toggle("invalid", rider.t1.trim() !== "" && parseTimeToMs(rider.t1) == null);
     t2.classList.toggle("invalid", rider.t2.trim() !== "" && parseTimeToMs(rider.t2) == null);
+  }
+}
+
+function updateRow(tr, rider){
+  const t1 = tr.querySelector('input[data-field="t1"]');
+  const t2 = tr.querySelector('input[data-field="t2"]');
+  const badge = tr.querySelector('[data-role="badge"]');
+  const bestCell = tr.querySelector('[data-role="best"]');
+
+  // invalid highlighting
+  if(t1) t1.classList.toggle("invalid", rider.t1.trim() !== "" && parseTimeToMs(rider.t1) == null);
+  if(t2) t2.classList.toggle("invalid", rider.t2.trim() !== "" && parseTimeToMs(rider.t2) == null);
+
+  // badge
+  const status = getRowStatus(rider);
+  if(badge){
+    badge.className = `badge ${status.klass}`;
+    badge.textContent = status.label;
+  }
+
+  // best time
+  const best = getBestTimeMs(rider);
+  if(bestCell){
+    bestCell.innerHTML = `<strong>${escapeHtml(formatMs(best))}</strong>`;
   }
 }
 
@@ -190,11 +216,6 @@ function renderRanking(){
   }
 }
 
-function rerender(){
-  renderInput();
-  renderRanking();
-}
-
 elInputTbody.addEventListener("input", (e) => {
   const target = e.target;
   if(!(target instanceof HTMLInputElement)) return;
@@ -208,11 +229,11 @@ elInputTbody.addEventListener("input", (e) => {
   const field = target.getAttribute("data-field");
   if(!field) return;
 
-  // Save
   rider[field] = target.value;
 
-  // Re-render just status highlights + ranking.
-  rerender();
+  // Update only this row (no full re-render of inputs) + ranking
+  updateRow(tr, rider);
+  renderRanking();
 });
 
 btnReset.addEventListener("click", () => {
@@ -220,7 +241,22 @@ btnReset.addEventListener("click", () => {
     r.t1 = "";
     r.t2 = "";
   }
-  rerender();
+
+  // Clear UI inputs without rebuilding the table
+  for(const tr of elInputTbody.querySelectorAll("tr")){
+    const id = Number(tr.getAttribute("data-id"));
+    const rider = state.find(x => x.id === id);
+    if(!rider) continue;
+
+    const t1 = tr.querySelector('input[data-field="t1"]');
+    const t2 = tr.querySelector('input[data-field="t2"]');
+    if(t1) t1.value = "";
+    if(t2) t2.value = "";
+
+    updateRow(tr, rider);
+  }
+
+  renderRanking();
 });
 
 btnExport.addEventListener("click", () => {
@@ -259,5 +295,6 @@ btnExport.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
-// Initial render
-rerender();
+// Init
+buildInputTable();
+renderRanking();
