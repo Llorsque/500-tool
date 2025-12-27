@@ -19,7 +19,6 @@ Een superlicht tooltje (static HTML/CSS/JS) om bij een schaatswedstrijd twee oml
 
 Vul tijden in als:
 - `SS,mmm` (bijv. `40,123`)
-- of `M:SS,mmm` (bijv. `1:12,345`)
 
 > De tool accepteert ook een punt als scheiding: `40.123`.
 

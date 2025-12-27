@@ -5,8 +5,16 @@
  */
 
 const DEFAULT_NAMES = [
-  "Rijder 1","Rijder 2","Rijder 3","Rijder 4","Rijder 5",
-  "Rijder 6","Rijder 7","Rijder 8","Rijder 9","Rijder 10"
+  "Jenning de Boo",
+  "Stefan Westenbroek",
+  "Merijn Scheperkamp",
+  "Sebas Diniz",
+  "Joep Wennemars",
+  "Janno Botman",
+  "Mats van den Bos",
+  "Johan Talsma",
+  "Tim Prins",
+  "Serge Yoro"
 ];
 
 const elInputTbody = document.getElementById("inputTbody");
@@ -49,25 +57,6 @@ function parseTimeToMs(raw){
   // normalize: allow '.' as decimal separator
   const norm = s.replace(".", ",");
 
-  // M:SS,mmm
-  if(norm.includes(":")){
-    const [mPart, rest] = norm.split(":");
-    const minutes = Number(mPart);
-    if(!Number.isInteger(minutes) || minutes < 0) return null;
-
-    const restMatch = rest.match(/^\d{1,2},\d{3}$/);
-    if(!restMatch) return null;
-
-    const [secStr, msStr] = rest.split(",");
-    const seconds = Number(secStr);
-    const millis = Number(msStr);
-
-    if(!Number.isInteger(seconds) || seconds < 0 || seconds > 59) return null;
-    if(!Number.isInteger(millis) || millis < 0 || millis > 999) return null;
-
-    return minutes * 60000 + seconds * 1000 + millis;
-  }
-
   // SS,mmm (allow 1-3 digit seconds)
   const match = norm.match(/^\d{1,3},\d{3}$/);
   if(!match) return null;
@@ -84,16 +73,10 @@ function parseTimeToMs(raw){
 
 function formatMs(ms){
   if(ms == null) return "—";
-  const minutes = Math.floor(ms / 60000);
-  const rem = ms % 60000;
-  const seconds = Math.floor(rem / 1000);
-  const millis = rem % 1000;
+  const seconds = Math.floor(ms / 1000);
+  const millis = ms % 1000;
 
   const msStr = String(millis).padStart(3, "0");
-  if(minutes > 0){
-    return `${minutes}:${String(seconds).padStart(2,"0")},${msStr}`;
-  }
-  // seconds can be >= 100 for some formats; pad to 2 when < 100
   const secStr = seconds < 100 ? String(seconds).padStart(2,"0") : String(seconds);
   return `${secStr},${msStr}`;
 }
