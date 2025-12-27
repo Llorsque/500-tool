@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Schaats Klassement Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">⏱️</div>
+        <div>
+          <h1>Schaats Klassement</h1>
+          <p class="subtitle">Vul tijden in als <strong>SS,mmm</strong> (bijv. 40,123) of <strong>M:SS,mmm</strong> (bijv. 1:12,345).</p>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnReset" class="btn btnSecondary" type="button">Reset tijden</button>
+        <button id="btnExport" class="btn" type="button">Export CSV</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container grid">
+    <section class="card">
+      <div class="cardHeader">
+        <h2>Invoer</h2>
+        <p class="muted">
+          Elke rijder rijdt 2 omlopen. De <strong>snelste</strong> van de twee telt. 
+          De tijd van de <strong>2e omloop telt pas mee</strong> zodra je die invult.
+        </p>
+      </div>
+
+      <div class="tableWrap" role="region" aria-label="Invoertabel">
+        <table class="table" id="inputTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Naam</th>
+              <th>1e omloop</th>
+              <th>2e omloop</th>
+              <th>Beste tijd</th>
+            </tr>
+          </thead>
+          <tbody id="inputTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="hint">
+        <div class="dot" aria-hidden="true"></div>
+        <div>
+          Tip: je kunt <kbd>Tab</kbd> gebruiken om snel door de velden te gaan.
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="cardHeader">
+        <h2>Klassement</h2>
+        <p class="muted">Volgorde van snelste naar langzaamste op basis van <strong>beste geldige tijd</strong>.</p>
+      </div>
+
+      <div class="tableWrap" role="region" aria-label="Klassement tabel">
+        <table class="table" id="rankTable">
+          <thead>
+            <tr>
+              <th>Pos</th>
+              <th>Rijder</th>
+              <th>Beste tijd</th>
+              <th>1e</th>
+              <th>2e</th>
+            </tr>
+          </thead>
+          <tbody id="rankTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="cardHeader">
+        <h2>Top 10 snelste tijden</h2>
+        <p class="muted">Dit is dezelfde ranking, maar beperkt tot de 10 snelste entries.</p>
+      </div>
+
+      <ol class="toplist" id="topList"></ol>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footerInner">
+      <span>© <span id="year"></span> — lokaal tooltje (static HTML/JS), ideaal voor GitHub Pages.</span>
+      <a class="link" href="README.md" target="_blank" rel="noopener">Handleiding</a>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
