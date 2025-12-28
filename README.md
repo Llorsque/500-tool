@@ -68,3 +68,12 @@ Open `app.js` en wijzig:
 
 - `LIVE_RESULTS_URL`
 - (optioneel) `LIVE_POLL_MS`
+
+
+### Troubleshooting: live tijden komen niet door
+
+Dit kan gebeuren door **CORS** of doordat de live-site data via JavaScript laadt. In deze versie probeert de tool daarom meerdere publieke proxies (`r.jina.ai` en `allorigins.win`).  
+
+Zie je nog steeds geen tijden?
+- Check de **Status** in de Live-koppeling kaart (bovenaan).
+- Als de status **Fout bij ophalen** blijft: dan blokkeert de bron/proxy. Dan is de meest robuuste oplossing een kleine serverless proxy (bijv. Cloudflare Worker) die jouw tool JSON teruggeeft.

@@ -279,60 +279,99 @@ function setLastUpdate(date){
 }
 
 /**
- * Fetch the live results page through Jina Reader and extract (name -> time) pairs.
- * We parse very defensively: we look for occurrences of a rider name near a time pattern.
+ * Fetch helper with fallbacks (because many sites block direct browser fetch via CORS).
+ * We try multiple public "reader/proxy" endpoints.
+ *
+ * NOTE: These endpoints can change their policies. If live fetch stops working,
+ * the most robust solution is a small serverless proxy (Cloudflare Worker).
+ */
+async function fetchViaProxies(targetUrl){
+  const cacheBust = Date.now();
+  const candidates = [
+    // Jina Reader
+    `https://r.jina.ai/${targetUrl}?_=${cacheBust}`,
+    // AllOrigins raw (CORS friendly)
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}&cache=${cacheBust}`,
+    // AllOrigins JSON wrapper (fallback)
+    `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&cache=${cacheBust}`,
+  ];
+
+  let lastErr = null;
+
+  for(const u of candidates){
+    try{
+      const res = await fetch(u, { cache: "no-store" });
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      if(u.includes("/get?")){
+        const data = await res.json();
+        const text = String(data && data.contents ? data.contents : "");
+        if(text.length > 200) return text;
+        throw new Error("Empty contents");
+      }else{
+        const text = await res.text();
+        if(text.length > 200) return text;
+        throw new Error("Empty response");
+      }
+    }catch(e){
+      lastErr = e;
+    }
+  }
+
+  throw lastErr || new Error("Fetch failed");
+}
+
+/**
+ * Extract (name -> time) from HTML/text.
+ * We do NOT rely on line breaks; we search in the full text with a small window.
  *
  * Time patterns accepted: 00,000 or 00.000
  */
-async function fetchLiveT2Map(){
-  const url = `https://r.jina.ai/${LIVE_RESULTS_URL}`;
-  const res = await fetch(url, { cache: "no-store" });
-  if(!res.ok) throw new Error(`HTTP ${res.status}`);
-  const text = await res.text();
+function extractTimesFromText(text){
+  const normText = normName(text);
 
-  // Build a map for only the names we care about (fast + avoids false positives)
-  const want = state.map(r => ({ raw: r.name, key: normName(r.name) }));
+  const timeRe = /(\d{1,2})[\.,](\d{3})/g;
+  const result = new Map();
 
-  // Pattern for time in seconds with thousandths
-  const timeRe = /\b(\d{1,2})[\.,](\d{3})\b/g;
+  for(const r of state){
+    const key = normName(r.name);
+    if(!key) continue;
 
-  // We'll scan line-by-line, looking for a rider name in the line,
-  // and then the first time after it (or in next ~2 lines).
-  const lines = text.split(/\r?\n/);
+    let start = 0;
+    let candidate = null;
 
-  const result = new Map(); // normName -> "SS,mmm"
+    while(true){
+      const idx = normText.indexOf(key, start);
+      if(idx === -1) break;
 
-  function findTimeInWindow(startIdx){
-    for(let j=startIdx; j<Math.min(lines.length, startIdx+3); j++){
-      const m = lines[j].match(timeRe);
-      if(m && m.length){
-        // pick the first time-looking match
-        const t = m[0].replace(".", ",");
-        if(parseTimeToMs(t) != null) return t;
-      }
-    }
-    return null;
-  }
-
-  for(let i=0;i<lines.length;i++){
-    const lineNorm = normName(lines[i]);
-    if(!lineNorm) continue;
-
-    for(const w of want){
-      if(result.has(w.key)) continue;
-
-      // Contains the name?
-      if(lineNorm.includes(w.key)){
-        const t = findTimeInWindow(i);
-        if(t){
-          result.set(w.key, t);
+      const window = normText.slice(idx, Math.min(normText.length, idx + 500));
+      timeRe.lastIndex = 0;
+      const m = timeRe.exec(window);
+      if(m){
+        const t = `${m[1]},${m[2]}`;
+        if(parseTimeToMs(t) != null){
+          candidate = t;
+          break;
         }
       }
+      start = idx + key.length;
+    }
+
+    if(candidate){
+      result.set(key, candidate);
     }
   }
 
   return result;
 }
+
+/**
+ * Fetch the live results page and extract (name -> time) pairs.
+ */
+async function fetchLiveT2Map(){
+  const text = await fetchViaProxies(LIVE_RESULTS_URL);
+  return extractTimesFromText(text);
+}
+
 
 async function runLiveOnce(){
   if(!liveEnabled) return;
