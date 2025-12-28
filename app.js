@@ -11,16 +11,28 @@
  */
 
 const DEFAULT_RIDERS = [
-  { name: "Sebas Diniz",        t1: "34,142", t2: "" },
-  { name: "Jenning de Boo",     t1: "34,361", t2: "" },
-  { name: "Merijn Scheperkamp", t1: "34,649", t2: "" },
-  { name: "Joep Wennemars",     t1: "34,671", t2: "" },
-  { name: "Tim Prins",          t1: "34,820", t2: "" },
-  { name: "Kayo Vos",           t1: "34,833", t2: "" },
-  { name: "Janno Botman",       t1: "34,986", t2: "" },
-  { name: "Tijmen Snel",        t1: "35,038", t2: "" },
-  { name: "Mats van den Bos",   t1: "35,188", t2: "" },
-  { name: "Stefan Westenbroek", t1: "39,556", t2: "" },
+  { name: "Femke Kok", t1: "36,873", t2: "" },
+  { name: "Jutta Leerdam", t1: "37,242", t2: "" },
+  { name: "Isabel Grevelt", t1: "37,460", t2: "" },
+  { name: "Marrit Fledderus", t1: "37,566", t2: "" },
+  { name: "Suzanne Schulting", t1: "37,626", t2: "" },
+  { name: "Michelle de Jong", t1: "37,686", t2: "" },
+  { name: "Naomi Verkerk", t1: "37,727", t2: "" },
+  { name: "Angel Daleman", t1: "37,791", t2: "" },
+  { name: "Chloé Hoogendoorn", t1: "37,892", t2: "" },
+  { name: "Pien Hersman", t1: "38,041", t2: "" },
+  { name: "Dione Voskamp", t1: "38,070", t2: "" },
+  { name: "Pien Smit", t1: "38,267", t2: "" },
+  { name: "Jildou Hoekstra", t1: "38,528", t2: "" },
+  { name: "Selma Poutsma", t1: "38,614", t2: "" },
+  { name: "Amber Duizendstraal", t1: "38,661", t2: "" },
+  { name: "Helga Drost", t1: "38,663", t2: "" },
+  { name: "Meike Veen", t1: "38,667", t2: "" },
+  { name: "Sylke Kas", t1: "38,799", t2: "" },
+  { name: "Henny de Vries", t1: "39,348", t2: "" },
+  { name: "Lotte Groenen", t1: "39,646", t2: "" },
+  { name: "Naomi Kammeraat", t1: "39,975", t2: "" },
+  { name: "Anna Boersma", t1: "42,671", t2: "" },
 ];
 
 const elInputTbody = document.getElementById("inputTbody");

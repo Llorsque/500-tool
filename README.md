@@ -19,7 +19,7 @@ Een superlicht tooltje (static HTML/CSS/JS) om bij een schaatswedstrijd twee oml
 
 ## Vooraf ingevulde 1e omloop
 
-In deze versie zijn de **1e omloop tijden alvast ingevuld** en staan de rijders links **vast** in de volgorde van snelste → langzaamste (op basis van omloop 1). Je kunt alleen nog de 2e omloop invullen; de beste (snelste) geldige tijd blijft tellen.
+In deze versie zijn de **1e omloop tijden alvast ingevuld** voor de **vrouwen** en staan de rijders links **vast** in de volgorde van snelste → langzaamste (op basis van omloop 1). Je kunt alleen nog de 2e omloop invullen; de beste (snelste) geldige tijd blijft tellen.
 
 ## Tijdsnotatie
 
