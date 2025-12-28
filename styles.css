@@ -266,3 +266,29 @@ kbd{
   font-weight: 700;
 }
 .link:hover{ text-decoration: underline; }
+
+
+/* Live sync */
+.liveGrid{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+@media (max-width: 880px){
+  .liveGrid{ grid-template-columns: 1fr; }
+}
+
+.pill{
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid rgba(255,255,255,.12);
+}
+.pill.ok{ background: rgba(82,232,232,.12); color: #52E8E8; }
+.pill.warn{ background: rgba(255,196,0,.12); color: #FFC400; }
+.pill.bad{ background: rgba(255,80,80,.12); color: #FF5050; }
+.mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }

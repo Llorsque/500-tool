@@ -48,3 +48,23 @@ Open `index.html` in je browser.
 Open `app.js` en vervang de `DEFAULT_NAMES` lijst bovenin.
 
 Veel plezier!
+
+
+## Live koppeling (2e omloop)
+
+Deze versie kan de **2e omloop automatisch invullen** vanuit de live uitslagenpagina:
+
+- Bron: `https://liveresults.schaatsen.nl/events/2026_NED_0002/competition/8/results`
+
+Omdat de tool als **statische pagina** draait (bijv. GitHub Pages) en veel websites geen cross-origin requests toestaan, gebruikt deze tool de Reader proxy:
+
+- `https://r.jina.ai/https://<url>`
+
+De tool **pollt elke ~15 seconden** en vult `2e omloop` bij de juiste naam zodra een tijd zichtbaar is.
+
+### Aanpassen naar een andere wedstrijd/afstand
+
+Open `app.js` en wijzig:
+
+- `LIVE_RESULTS_URL`
+- (optioneel) `LIVE_POLL_MS`
